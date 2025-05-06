@@ -33,7 +33,10 @@ partial class Program
             Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
         });
         PollyConfig.Configure(services);
-        services.AddHttpClient();
+        services.AddHttpClient<MyService>().ConfigureHttpClient(client =>
+        {
+            client.Timeout = Timeout.InfiniteTimeSpan;
+        });
         services.AddSingleton<MyService>();
         IServiceProvider Services = services.BuildServiceProvider();
         return Services;
@@ -46,12 +49,13 @@ partial class Program
     static async Task Main()
     {
         _logger.LogInformation("メイン処理開始");
-        String requestUrl = "https://xb3ztbjdfy7fwxpujbfodwjqlq0aiywl.lambda-url.ap-northeast-1.on.aws/";
-        //String requestUrl = "https://abcde.fgh/";
+        //String requestUrl = "https://xb3ztbjdfy7fwxpujbfodwjqlq0aiywl.lambda-url.ap-northeast-1.on.aws/";
+        String requestUrl = "https://abcde.fgh/";
         CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         CancellationToken outerCancellationToken = cancellationTokenSource.Token;
         _ = MonitorEnterKeyPress(cancellationTokenSource);
 
+        // バッチ処理等で複数回リクエストする場合を想定
         Boolean exitLoop = false;
         for(Int32 i = 1; i <= 3; i++)
         {
