@@ -19,7 +19,7 @@ public class MyService(
     /// 
     /// </summary>
     /// <param name="requestUrl">リクエストするURL</param>
-    /// <param name="outerCancellationToken">リクエスト処理キャンセル用トークン</param>
+    /// <param name="outerCancellationToken">ユーザ操作によるリクエスト処理キャンセル用トークン</param>
     /// <returns></returns>
     public async Task<HttpResponseMessage> GetRequestAndPrint(String requestUrl, CancellationToken outerCancellationToken)
     {

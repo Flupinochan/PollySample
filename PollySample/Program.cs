@@ -28,16 +28,16 @@ partial class Program
     {
         ServiceCollection services = new ServiceCollection();
         LoggingConfig.Configure(services);
+        PollyConfig.Configure(services);
+        services.AddSingleton<MyService>();
         services.AddSingleton(new JsonSerializerOptions
         {
             Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
         });
-        PollyConfig.Configure(services);
         services.AddHttpClient<MyService>().ConfigureHttpClient(client =>
         {
             client.Timeout = Timeout.InfiniteTimeSpan;
         });
-        services.AddSingleton<MyService>();
         IServiceProvider Services = services.BuildServiceProvider();
         return Services;
     }
@@ -49,8 +49,8 @@ partial class Program
     static async Task Main()
     {
         _logger.LogInformation("メイン処理開始");
-        //String requestUrl = "https://xb3ztbjdfy7fwxpujbfodwjqlq0aiywl.lambda-url.ap-northeast-1.on.aws/";
-        String requestUrl = "https://abcde.fgh/";
+        String requestUrl = "https://xb3ztbjdfy7fwxpujbfodwjqlq0aiywl.lambda-url.ap-northeast-1.on.aws/";
+        //String requestUrl = "https://abcde.fgh/";
         CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         CancellationToken outerCancellationToken = cancellationTokenSource.Token;
         _ = MonitorEnterKeyPress(cancellationTokenSource);
@@ -83,7 +83,7 @@ partial class Program
                         _logger.LogError("サーバから異常な応答が得られました");
                         _logger.LogError($"{myResponseModel.StatusCode}: {myResponseModel.Message}");
                         break;
-                    // 通信エラーでPollyでレスポンスを置き換えた場合
+                    // 通信エラーもしくはキャンセルでPollyでレスポンスを置き換えた場合
                     case 1003:
                         _logger.LogError("サーバとの通信に失敗しました");
                         _logger.LogError($"{myResponseModel.StatusCode}: {myResponseModel.Message}");
@@ -99,7 +99,8 @@ partial class Program
     }
 
     /// <summary>
-    /// Enterキーがおされたらリクエスト処理をキャンセルする
+    /// Enterキーが押されたらリクエスト処理をキャンセルする
+    /// ※リクエストの結果を待たないで後続処理をする
     /// </summary>
     /// <param name="cts"></param>
     /// <returns></returns>

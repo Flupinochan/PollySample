@@ -27,13 +27,13 @@ public class PollyConfig
             JsonSerializerOptions jsonSerializerOptions = context.ServiceProvider.GetRequiredService<JsonSerializerOptions>();
 
             // 1. 処理全体(最終結果)を処理
-            //    例外発生時、Responseがnullだった場合に、仮のResponseを設定
+            //    例外が発生もしくはResponseがnullだった場合に、仮のResponseを設定
             builder.AddFallback(new FallbackStrategyOptions<HttpResponseMessage>
             {
                 ShouldHandle = (FallbackPredicateArguments<HttpResponseMessage> fallbackPredicateArguments) =>
                 {
-                    // Exception発生時 or Responseがnullの場合 は、ステータスコードを置き換える
-                    // ※HttpStatusCodeではなく、独自のステータスコードを用意すること!
+                    // ※HttpStatusCodeではなく、独自のステータスコードを用意し、
+                    // switch文で、後続の処理は独自のステータスコードに応じて処理をする
                     if(fallbackPredicateArguments.Outcome.Exception is not null || fallbackPredicateArguments.Outcome.Result is null)
                         return PredicateResult.True();
                     else
@@ -117,7 +117,7 @@ public class PollyConfig
                     return default;
                 }
             });
-            // .AddFallback(xxx) // リトライ(各処理)ごとに適用されるFallback
+            // .AddFallback(xxx) // 必要であれば、リトライ(各処理)ごとに適用されるFallbackを設定
 
             // Timeoutメモ
             /// Timeout専用のCancellationTokenを内部(inner)に所有している
@@ -125,7 +125,7 @@ public class PollyConfig
             /// try-catchしてもいいし、fallback処理してもよい
             /// 
             /// outerCancelTokenを利用する場合、すでにキャンセルされているouterCancelTokenを渡したら、
-            /// 即座にFallback処理されず、例外(OperationCanceledException)が発生するので気を付ける
+            /// Fallback処理されず、即座に例外(OperationCanceledException)が発生するので気を付けること!
         });
     }
 }
